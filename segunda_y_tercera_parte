@@ -1,0 +1,208 @@
+#define LEDA 12
+#define LEDB 13
+#define LEDC 7
+#define LEDD 8
+#define LEDE 9
+#define LEDF 11
+#define LEDG 10
+#define INTERRUPTOR A3
+#define TEMPERATURA A1
+#define PULSADORRESET 4
+#define PULSADORSUBIR 5
+#define PULSADORBAJAR 3
+#define CATODO_DECIMAL A5
+#define CATODO_UNIDAD A4
+#define MOTOR_PIN A0
+#define FOTODIODO A2
+
+void mostrarSegmentos(int a, int b, int c, int d, int e, int f, int g);
+void mostrarNumero(int num);
+void encenderYApagar(int contador,int mostrar);
+int esPrimo(int contador);
+int contador = 0;
+int unidades = 0;
+int decenas = 0;
+int mostrarUnidades = 1;
+int estadoInterruptor;
+int temperatura;
+int temperaturaFinal;
+int fotodiodo;
+int umbralTemperatura = 25;  // Ajusta según tus necesidades
+int umbralLuz = 85;
+
+
+void setup()
+{
+   // Configura los pines de los pulsadores como entradas
+  pinMode(PULSADORRESET, INPUT_PULLUP); // Pulsador para Reset
+  pinMode(PULSADORSUBIR, INPUT_PULLUP); // Pulsador para aumentar
+  pinMode(PULSADORBAJAR, INPUT_PULLUP); // Pulsador para disminuir
+  pinMode(LEDA,OUTPUT);
+  pinMode(LEDB,OUTPUT);
+  pinMode(LEDC,OUTPUT);
+  pinMode(LEDD,OUTPUT);
+  pinMode(LEDE,OUTPUT);
+  pinMode(LEDF,OUTPUT);
+  pinMode(LEDG,OUTPUT);
+  pinMode(MOTOR_PIN,OUTPUT);
+  pinMode(INTERRUPTOR,INPUT);
+  pinMode(CATODO_DECIMAL,OUTPUT);
+  pinMode(CATODO_UNIDAD,OUTPUT);
+  pinMode(TEMPERATURA,INPUT);
+  pinMode(FOTODIODO,INPUT);
+  Serial.begin(9600);
+}
+
+void loop()
+{ 
+  temperatura = analogRead(TEMPERATURA);
+  fotodiodo =  analogRead(FOTODIODO);
+  temperaturaFinal = map(temperatura,20,358,-40,125);
+   Serial.println(temperaturaFinal);
+   Serial.println(fotodiodo);
+   estadoInterruptor = analogRead(INTERRUPTOR);
+   // Verifica si se presionó el pulsador de Reset
+  	if (digitalRead(PULSADORRESET) == LOW) 
+  	{
+    	contador = 0; // Pone la cuenta a cero
+       digitalWrite(CATODO_DECIMAL, HIGH);
+	   digitalWrite(CATODO_UNIDAD,HIGH);
+  	}
+
+  // Verifica si se presionó el pulsador para aumentar
+  	if (digitalRead(PULSADORSUBIR) == LOW) 
+  	{
+     	contador = (contador + 1) % 100;
+
+  	}
+  
+
+  // Verifica si se presionó el pulsador para disminuir
+  	if (digitalRead(PULSADORBAJAR) == LOW) 
+  	{
+     contador = (contador + 99) % 100;
+     
+
+  	}
+   
+    if (estadoInterruptor == LOW)
+    {
+      // Enciende el motor en una dirección.
+      mostrarUnidades = !mostrarUnidades;
+  	  encenderYApagar(contador,mostrarUnidades);
+      Serial.println(contador);
+  	  delay(100);
+      if (contador >= 10 && contador <= 50) 
+       { // Si es de día 
+        if (temperatura >= umbralTemperatura && fotodiodo <= umbralLuz)
+        {
+         digitalWrite(MOTOR_PIN, HIGH); // Enciende el motor
+        }
+       }
+      else 
+      {
+       digitalWrite(MOTOR_PIN, LOW); // Si es de noche, apaga el motor
+       }
+    }
+   
+  else
+    {
+      if(esPrimo(contador))
+         {
+          mostrarUnidades = !mostrarUnidades;
+  	      encenderYApagar(contador,mostrarUnidades);
+          Serial.println(contador);
+  	      delay(150); 
+         }
+    }
+}
+
+int esPrimo(int contador)
+{
+  if (contador <= 1) 
+  {
+    return 0; // Los números negativos, 0 y 1 no son primos.
+  }
+  for (int i = 2; i < contador; i++) 
+  {
+    if (contador % i == 0) 
+    {
+      return 0; // No es primo si es divisible por i.
+    }
+  }
+  return 1; // Si no es divisible por ningún número, es primo.
+}
+
+void encenderYApagar(int contador,int mostrar)
+{
+  unidades = contador % 10;
+  decenas = contador / 10;
+  if (mostrar) 
+  {
+    mostrarNumero(unidades);
+    digitalWrite(CATODO_DECIMAL, HIGH);
+	digitalWrite(CATODO_UNIDAD,LOW); 
+  } 
+  else 
+  { 
+    if (decenas != 0)
+  {   
+    mostrarNumero(decenas);
+    digitalWrite(CATODO_DECIMAL, LOW);
+	digitalWrite(CATODO_UNIDAD,HIGH); 
+
+  }
+  }
+  
+}
+void mostrarNumero(int num)
+{
+   switch(num)
+  {
+    case 0:
+    	mostrarSegmentos(1,1,1,1,1,1,0);
+    	break;
+    case 1:
+    	mostrarSegmentos(0,1,1,0,0,0,0);
+    	break;
+    case 2:
+    	mostrarSegmentos(1,1,0,1,1,0,1);
+    	break;
+    case 3:
+    	mostrarSegmentos(1,1,1,1,0,0,1);
+    	break;
+    case 4:
+    	mostrarSegmentos(0,1,1,0,0,1,1);
+    	break;
+    case 5:
+    	mostrarSegmentos(1,0,1,1,0,1,1);
+    	break;
+    case 6:
+    	mostrarSegmentos(1,0,1,1,1,1,1);
+    	break;
+    case 7:
+    	mostrarSegmentos(1,1,1,0,0,0,0);
+    	break;
+    case 8:
+    	mostrarSegmentos(1,1,1,1,1,1,1);
+    	break;
+    case 9:
+    	mostrarSegmentos(1,1,1,1,0,1,1);
+    	break;
+   }
+}
+
+
+void mostrarSegmentos(int a, int b, int c, int d, int e, int f, int g) 
+{
+  digitalWrite(LEDA, a);
+  digitalWrite(LEDB, b);
+  digitalWrite(LEDC, c);
+  digitalWrite(LEDD, d);
+  digitalWrite(LEDE, e);
+  digitalWrite(LEDF, f);
+  digitalWrite(LEDG, g);
+}
+
+ en esta parte agregamos un motor de corriente continua, un sensor de temperatura y un fotodiodo, usamos el contador para simular las horas del dia, y cuando sea de dia y haga calor(esto s
+ se mide gracias al sensor y fotodiodo) se prendera el motor simulando ser el motor de un ventilador
