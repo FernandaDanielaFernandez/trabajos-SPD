@@ -1,0 +1,148 @@
+/* C++ code
+aumenta o disminuye en contador dependiendo del boton
+que apretemos, cuanta con 2 display 7 seg para mostrar
+los numeros del 0 al 99, esto lo hace gracias a 
+la miltiplexacion, ambos display tienen los led 
+conectados a la misma salida digital y su catodo
+a una entrada analogia, prendiendo o apagando estas
+entradas controlamos que display prender
+*/
+#define LEDA 12
+#define LEDB 13
+#define LEDC 7
+#define LEDD 8
+#define LEDE 9
+#define LEDF 11
+#define LEDG 10
+#define PULSADORRESET 4
+#define PULSADORSUBIR 5
+#define PULSADORBAJAR 3
+#define CATODO_DECIMAL A5
+#define CATODO_UNIDAD A4
+
+void mostrarSegmentos(int a, int b, int c, int d, int e, int f, int g);
+void mostrarNumero(int num);
+
+int contador = 0;
+int unidades = 0;
+int decenas = 0;
+int mostrarUnidades = 1;
+
+
+void setup()
+{
+   // Configura los pines
+  pinMode(PULSADORRESET, INPUT_PULLUP); 
+  pinMode(PULSADORSUBIR, INPUT_PULLUP); 
+  pinMode(PULSADORBAJAR, INPUT_PULLUP); 
+  pinMode(LEDA,OUTPUT);
+  pinMode(LEDB,OUTPUT);
+  pinMode(LEDC,OUTPUT);
+  pinMode(LEDD,OUTPUT);
+  pinMode(LEDE,OUTPUT);
+  pinMode(LEDF,OUTPUT);
+  pinMode(LEDG,OUTPUT);
+  pinMode(CATODO_DECIMAL,OUTPUT);
+  pinMode(CATODO_UNIDAD,OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+    // Verifica si se presionó el pulsador de Reset
+  if (digitalRead(PULSADORRESET) == LOW) 
+  {
+    contador = 0; // Pone la cuenta a cero
+  }
+
+  // Verifica si se presionó el pulsador para aumentar
+  if (digitalRead(PULSADORSUBIR) == LOW) 
+  {
+     contador = (contador + 1) % 100;
+
+  }
+  
+
+  // Verifica si se presionó el pulsador para disminuir
+  if (digitalRead(PULSADORBAJAR) == LOW) 
+  {
+     contador = (contador + 99) % 100;
+
+  }
+  
+  unidades = contador % 10;
+  decenas = contador / 10;
+  
+  if (mostrarUnidades) 
+  {
+    mostrarNumero(unidades);
+    digitalWrite(CATODO_DECIMAL, HIGH);
+	digitalWrite(CATODO_UNIDAD,LOW); 
+
+  } else 
+  { if (decenas != 0)
+  {   
+    mostrarNumero(decenas);
+    digitalWrite(CATODO_DECIMAL, LOW);
+	digitalWrite(CATODO_UNIDAD,HIGH); 
+  }
+  }
+
+  mostrarUnidades = !mostrarUnidades;
+  delay(100);
+
+  // Muestra el valor del contador en el monitor serial
+  Serial.println(contador);
+    
+    
+    
+  }
+  // Espera un breve periodo de tiempo para evitar rebotes
+  
+
+void mostrarNumero(int num)
+{
+   switch(num)
+  {
+    case 0:
+    	mostrarSegmentos(1,1,1,1,1,1,0);
+    	break;
+    case 1:
+    	mostrarSegmentos(0,1,1,0,0,0,0);
+    	break;
+    case 2:
+    	mostrarSegmentos(1,1,0,1,1,0,1);
+    	break;
+    case 3:
+    	mostrarSegmentos(1,1,1,1,0,0,1);
+    	break;
+    case 4:
+    	mostrarSegmentos(0,1,1,0,0,1,1);
+    	break;
+    case 5:
+    	mostrarSegmentos(1,0,1,1,0,1,1);
+    	break;
+    case 6:
+    	mostrarSegmentos(1,0,1,1,1,1,1);
+    	break;
+    case 7:
+    	mostrarSegmentos(1,1,1,0,0,0,0);
+    	break;
+    case 8:
+    	mostrarSegmentos(1,1,1,1,1,1,1);
+    	break;
+    case 9:
+    	mostrarSegmentos(1,1,1,1,0,1,1);
+    	break;
+   }
+}
+void mostrarSegmentos(int a, int b, int c, int d, int e, int f, int g) 
+{
+  digitalWrite(LEDA, a);
+  digitalWrite(LEDB, b);
+  digitalWrite(LEDC, c);
+  digitalWrite(LEDD, d);
+  digitalWrite(LEDE, e);
+  digitalWrite(LEDF, f);
+  digitalWrite(LEDG, g);
+}
